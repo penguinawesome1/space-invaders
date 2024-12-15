@@ -1,0 +1,51 @@
+/* body::-webkit-scrollbar {
+    width: 12px;
+}
+
+body::-webkit-scrollbar-track {
+    background-color: #669BBC;
+}
+
+body::-webkit-scrollbar-thumb {
+    border-radius: .1rem;
+    background-color: #003049;
+} */
+
+.wavy-bottom {
+    --mask:
+        radial-gradient(25.2px at 50% calc(100% - 35.25px),#000 99%,#0000 101%) calc(50% - 30px) 0/60px 100%,
+        radial-gradient(25.2px at 50% calc(100% + 20.25px),#0000 99%,#000 101%) 50% calc(100% - 15px)/60px 100% repeat-x;
+    -webkit-mask: var(--mask);
+    mask: var(--mask);
+}
+
+.snow-pattern {
+    background-image: url("./images/repeating-snowflakes.svg");
+    background-size: 10%;
+    position: absolute;
+    height: 100%;
+    width: 100%;
+    opacity: 0.1;
+    animation: fall 200s linear infinite;
+    will-change: background-position;
+}
+
+@keyframes fall {
+    from { background-position: 0% 0%; }
+    to { background-position: 50% 100%; }
+}
+
+.stripe-pattern {
+    background-image: repeating-linear-gradient(45deg,#780000,#780000 60px,#C1121F 60px,#C1121F 120px);
+    background-size: 200%;
+    position: absolute;
+    height: 100%;
+    width: 100%;
+    animation: pan 200s linear infinite;
+    will-change: background-position;
+}
+
+@keyframes pan {
+    from { background-position: 100% 0%; }
+    to { background-position: 0% 0%; }
+}

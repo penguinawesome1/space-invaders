@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Space Invaders</title>
+    <link rel="icon" type="image/svg+xml" href="./images/canon.svg">
+    <link rel="stylesheet" href="index.css">
+    <!-- <script src="space-invaders.js" defer></script> -->
+
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/2.0.2/tailwind.min.css" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-[radial-gradient(#0e5d87,#003049)] text-[#FDF0D5] font-sans relative">
+    <div class="snow-pattern z-[-10]"></div>
+    <div class="h-svh grid grid-rows-[7rem_1fr] grid-cols-[4fr_1fr]">
+        <header class="col-span-2 flex justify-center items-center wavy-bottom relative">
+            <div class="stripe-pattern"></div>
+            <a href="#" class="translate-y-[-0.5rem] text-inherit font-black text-3xl">SPACE INVADERS</a>
+        </header>
+        <main class="mx-auto m-10">
+            <canvas class="border border-gray-300 rounded-md shadow-2xl bg-white h-full aspect-square" id="game-board"></canvas>
+        </main>
+        <aside class="m-10 bg-[#53acdb] flex flex-col justify-start items-center py-10 gap-8 overflow-y-auto rounded-tl-xl rounded-br-xl">
+            <p id="score" class="font-bold text-7xl">0</p>
+            <button class="text-lg text-black p-4 w-3/4 rounded-lg bg-[#FDF0D5] transition-all border-b-4 border-black hover:bg-[#C1121F] hover:border-[#780000] hover:text-white active:rounded-3xl focus:outline-none">Difficulty: Hard</button>
+            <button class="text-lg text-black p-4 w-3/4 rounded-lg bg-[#FDF0D5] transition-all border-b-4 border-black hover:bg-[#C1121F] hover:border-[#780000] hover:text-white active:rounded-3xl focus:outline-none">Pause</button>
+            <button class="text-lg text-black p-4 w-3/4 rounded-lg bg-[#FDF0D5] transition-all border-b-4 border-black hover:bg-[#C1121F] hover:border-[#780000] hover:text-white active:rounded-3xl focus:outline-none">Restart</button>
+        </aside>
+    </div>
+</body>
+</html>
