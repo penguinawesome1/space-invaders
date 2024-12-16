@@ -1,7 +1,6 @@
 function startGame() {
-    const player = new Component(30, 30, "./images/canon.svg", 10, 120);
-    const board = new Board();
-    board.start(player);
+    const player = new Player(300, 30, "./images/repeating-snowflakes.svg", 10, 120);
+    const board = new Board(player);
 }
 
 class Board {
@@ -10,11 +9,35 @@ class Board {
         this.canvas = document.getElementById("game-board");
         this.context = this.canvas.getContext("2d");
         this.frameNo = 0;
-        this.bugs = [];
+        this.alienList = [];
+        this.interval = setInterval(this.update(), 20);
     }
   
-    start() {
-        this.interval = setInterval(this.update, 20);
+    update() {
+        this.clear();
+        this.frameNo++;
+            
+        if (this.alienList) {
+            for (let i = 0; i < this.alienList.length; i += 1) {
+                if (this.player.crashWith(this.alienList[i])) {
+                    // GAME OVER
+                    return;
+                }
+            }
+        }
+
+        if (this.frameNo == 1 || this.everyInterval(150)) {
+            const alien = new Alien(10, 10, "./images/canon.svg", this.canvas.width, 0);
+            alien.speedY = 10;
+            this.alienList.push(alien);
+        }
+
+        for (let i = 0; i < this.alienList.length; i += 1) {
+            this.alienList[i].newPos();
+            this.alienList[i].update();
+        }
+        player.newPos();
+        player.update();
     }
 
     clear() {
@@ -24,72 +47,60 @@ class Board {
     everyInterval(n) {
         return (this.frameNo / n) % 1 == 0;
     }
-  
-    update() {
-        this.clear();
-        this.frameNo++;
-            
-        if (this.bugs) {
-            for (let i = 0; i < this.bugs.length; i += 1) {
-                if (this.player.crashWith(this.bugs[i])) {
-                    // GAME OVER
-                    return;
-                }
-            }
-        }
-
-        if (this.frameNo == 1 || this.everyInterval(150)) {
-            const myBug = new Component(10, 10, "./images/canon.svg", canvas.width, 0);
-            myBug.speedY = 10;
-            bugs.push(myBug);
-        }
-
-        for (i = 0; i < bugs.length; i += 1) {
-            bugs[i].newPos();
-            bugs[i].update();
-        }
-        player.newPos();
-        player.update();
-    }
 }
 
 class Component {
-    constructor(width, height, imageUrl, x, y, type) {
-        this.type = type;
-        this.score = 0;
+    constructor(width, height, x, y, imageUrl) {      
         this.width = width;
         this.height = height;
-        this.speedX = 0;
-        this.speedY = 0;    
         this.x = x;
         this.y = y;
-        this.gravity = 0;
-        this.gravitySpeed = 0;
-
+        
         let image = new Image();
 	    image.src = imageUrl;
-	    image.onload = () => this.image = image;
-    }
-
-	update() {
-		ctx = this.context;
-		ctx.drawImage(this.image, this.x, this.y, this.width, this.height);
-	};
-    
-    newPos() {
-        this.gravitySpeed += this.gravity;
-        this.x += this.speedX;
-        this.y += this.speedY + this.gravitySpeed;
-        this.hitBottom;
-    }
-    
-    hitBottom() {
-        const rockbottom = board.canvas.height - this.height;
-        if (this.y > rockbottom + this.height) {
-            bugs.splice(bugs.indexOf(this), 1);
+	    image.onload = () => {
+            this.image = image;
+            this.update();
         }
     }
     
+    update() {
+        this.context.drawImage(this.image, this.x, this.y, this.width, this.height);
+    }
+}
+
+class Alien extends Component {
+    constructor(width = 30, height = 30, x = 30, imageUrl, speedY = 10) {
+        const y = 0;
+        super(width, height, x, y, imageUrl);
+        this.speedY = speedY;
+        this.canvas = document.getElementById("game-board");
+        this.context = this.canvas.getContext("2d");
+    }
+
+    newPos() {
+        this.y += this.speedY;
+        this.hitBottom();
+    }
+
+    hitBottom() {
+        const rockbottom = this.canvas.height - this.height;
+        if (this.y > rockbottom + this.height) {
+            alienList.splice(alienList.indexOf(this), 1);
+        }
+    }
+}
+
+class Player extends Component {
+    constructor(imageUrl) {
+        const width = 30;
+        const height = 30;
+        const x = 0;
+        const y = 0;
+        super(width, height, x, y, imageUrl);
+        this.speedX = 0;
+    }
+
     crashWith(otherObj) {
         const myLeft = this.x;
         const myRight = this.x + (this.width);
@@ -100,6 +111,10 @@ class Component {
         const otherTop = otherObj.y;
         const otherBottom = otherObj.y + (otherObj.height);
         return !((myBottom < otherTop) || (myTop > otherBottom) || (myRight < otherLeft) || (myLeft > otherRight));
+    }
+
+    newPos() {
+        this.x += this.speedX;
     }
 }
 
