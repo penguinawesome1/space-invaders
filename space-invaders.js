@@ -7,42 +7,14 @@ class Board {
         this.alienList = [];
         this.enemyBulletList = [];
         this.playerBulletList = [];
-        this.initInputListeners();
         this.loop = setInterval(this.update.bind(this), 32);
-    }
-
-    initInputListeners() {
-        document.addEventListener('keydown', (event) => {
-            switch(event.key.toUpperCase()) {
-                case "ARROWLEFT":
-                case "A": player.moveLeft(); break;
-                case "ARROWRIGHT":
-                case "D": player.moveRight(); break;
-                case " ":
-                case "ARROWUP":
-                case "W": player.shootBullet(); break;
-                case "P":
-                    pauseMenu.showModal();
-                    pauseMenu.classList.remove("hidden");
-                    clearInterval(board.loop);
-                    break;
-            }
-        });
-        
-        document.addEventListener('keyup', (event) => {
-            switch(event.key.toUpperCase()) {
-                case "ARROWLEFT":
-                case "A": player.stopLeft(); break;
-                case "ARROWRIGHT":
-                case "D": player.stopRight(); break;
-            }
-        });
     }
 
     spawnAlien() {
         const url = "./images/alien.png";
-        const x = this.getRandomInt(this.canvas.width);
-        const alien = new Alien(url, 60, 60, x, 3);
+        const x = Math.max(0, this.getRandomInt(this.canvas.width) - 60);
+        const speedY = 2 + difficulties[currentDifficulty]
+        const alien = new Alien(url, 60, 60, x, speedY);
         alien.draw();
         this.alienList.push(alien);
     }
@@ -52,16 +24,14 @@ class Board {
         this.scoreDisplay.innerText = Math.floor(this.score);
 
         this.clear();
+        player.newPos();
+        player.draw();
         for (let i = this.alienList.length - 1; i >= 0; i--) {
             this.alienList[i].newPos();
             this.alienList[i].draw();
 
             if (player.crashWith(this.alienList[i])) {
-                console.log("game over!");
-                const lossMenu = document.getElementById("loss-menu");
-                lossMenu.showModal();
-                lossMenu.classList.remove("hidden");
-                clearInterval(board.loop);
+                this.gameOver();
                 return;
             }
             for (let a = this.playerBulletList.length - 1; a >= 0; a--) {
@@ -69,9 +39,13 @@ class Board {
                     board.alienList.splice(i, 1);
                     board.playerBulletList.splice(a, 1);
                     this.score += 10;
-                    i--;
-                    a--;
+                    break;
                 }
+            }
+
+            const frequency = 160 - difficulties[currentDifficulty] * 40;
+            if (this.getRandomInt(frequency) === 0) {
+                this.alienList[i].shootBullet();
             }
         }
         for (let i = this.enemyBulletList.length - 1; i >= 0; i--) {
@@ -80,13 +54,12 @@ class Board {
             myBullet.draw();
             const belowScreen = myBullet.y - myBullet.height > this.canvas.height;
             if (player.crashWith(this.enemyBulletList[i])) {
-                console.log("game over!");
-                clearInterval(board.loop);
+                this.gameOver();
                 return;
             }
             if (belowScreen) {
                 this.enemyBulletList.splice(i, 1);
-                i--;
+                break;
             }
         }
         for (let i = this.playerBulletList.length - 1; i >= 0; i--) {
@@ -96,13 +69,12 @@ class Board {
             const aboveScreen = myBullet.y + myBullet.height < 0;
             if (aboveScreen) {
                 this.playerBulletList.splice(i, 1);
-                i--;
+                break;
             }
         }
-        player.newPos();
-        player.draw();
 
-        if (this.getRandomInt(80) === 0) {
+        const frequency = 120 - difficulties[currentDifficulty] * 40
+        if (this.getRandomInt(frequency) === 0) {
             this.spawnAlien();
         }
     }
@@ -113,6 +85,14 @@ class Board {
 
     clear() {
         this.context.clearRect(0, 0, this.canvas.width, this.canvas.height);
+    }
+
+    gameOver() {
+        console.log("game over!");
+        const lossMenu = document.getElementById("loss-menu");
+        lossMenu.showModal();
+        lossMenu.classList.remove("hidden");
+        clearInterval(board.loop);
     }
 }
 
@@ -189,13 +169,14 @@ class Player extends Component {
     shootBullet() {
         if (!this.canShoot) return;
         const url = "./images/bullet.png";
-        const bullet = new Bullet(url, 25, 25, this.x + (this.width - 25) / 2, this.y - 30, -10);
+        const bullet = new Bullet(url, 25, 25, this.x + (this.width - 25) / 2, this.y, -10);
         bullet.draw();
         board.playerBulletList.push(bullet);
+        const cooldown = 700 + difficulties[currentDifficulty] * 100;
         this.canShoot = false;
         setTimeout(() => {
             this.canShoot = true;
-        }, 800);
+        }, cooldown);
     }
 }
 
@@ -219,7 +200,7 @@ class Alien extends Component {
 
     shootBullet() {
         const url = "./images/bullet.png";
-        const bullet = new Bullet(url, 25, 25, this.x + (this.width - 25) / 2, this.y - 30, 10);
+        const bullet = new Bullet(url, 25, 25, this.x + (this.width - 25) / 2, this.y + this.height, 10);
         bullet.draw();
         board.enemyBulletList.push(bullet);
     }
@@ -238,6 +219,32 @@ class Bullet extends Component {
 
 let player = new Player();
 let board = new Board();
+
+document.addEventListener('keydown', (event) => {
+    switch(event.key.toUpperCase()) {
+        case "ARROWLEFT":
+        case "A": player.moveLeft(); break;
+        case "ARROWRIGHT":
+        case "D": player.moveRight(); break;
+        case " ":
+        case "ARROWUP":
+        case "W": player.shootBullet(); break;
+        case "P":
+            pauseMenu.showModal();
+            pauseMenu.classList.remove("hidden");
+            clearInterval(board.loop);
+            break;
+    }
+});
+
+document.addEventListener('keyup', (event) => {
+    switch(event.key.toUpperCase()) {
+        case "ARROWLEFT":
+        case "A": player.stopLeft(); break;
+        case "ARROWRIGHT":
+        case "D": player.stopRight(); break;
+    }
+});
 
 const pauseMenu = document.getElementById("pause-menu");
 const lossMenu = document.getElementById("loss-menu");
@@ -267,3 +274,17 @@ document.getElementById("restart2").addEventListener("click", () => {
     player = new Player();
     board = new Board();
 });
+
+const difficultyNames = ["Easy", "Normal", "Hard"];
+const difficulties = [0, 1, 2];
+let currentDifficulty = 1;
+function updateDifficulty() {
+    currentDifficulty = (currentDifficulty + 1) % difficultyNames.length;
+    difficultyButton1.textContent = `Difficulty: ${difficultyNames[currentDifficulty]}`;
+    difficultyButton2.textContent = `Difficulty: ${difficultyNames[currentDifficulty]}`;
+};
+
+const difficultyButton1 = document.getElementById("difficulty1");
+const difficultyButton2 = document.getElementById("difficulty2");
+difficultyButton1.addEventListener('click', updateDifficulty);
+difficultyButton2.addEventListener('click', updateDifficulty);
