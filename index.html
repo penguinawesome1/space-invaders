@@ -19,16 +19,21 @@
             <a href="#" class="-translate-y-2 text-inherit font-black text-3xl">SPACE INVADERS</a>
         </header>
         <div class="h-3/4 aspect-square relative">
-            <canvas width="1000" height="1000" class="border border-gray-300 rounded-md shadow-2xl bg-white w-full aspect-square" id="game-board"></canvas>
+            <canvas width="1000" height="1000" class="bg-gradient-to-tr from-blue-200 to-blue-50 border border-gray-300 rounded-md shadow-2xl bg-white w-full aspect-square" id="game-board"></canvas>
             <button id="pause-button" class="absolute bottom-2 right-2 w-8 h-8 rounded-lg bg-black/75 grid place-items-center">
                 <div class="w-4 h-4 border-white border-x-4"></div>
             </button>
             <p id="score" class="absolute top-2 right-2 font-bold text-6xl text-black/75">0</p>
         </div>
         <dialog id="pause-menu" class="select-none bg-[#53acdb4D] flex flex-col items-center p-10 w-80 gap-8 rounded-tl-xl rounded-br-xl hidden">
-            <button id="unpause" class="text-lg p-4 w-3/4 text-black bg-[#FDF0D5] rounded-md shadow-[rgba(45,35,66,0.4)_0_2px_4px,rgba(45,35,66,0.3)_0_7px_13px_-3px,#D6D6E7_0_-3px_0_inset] hover:shadow-[rgba(45,_35,_66,_0.4)_0_4px_8px,_rgba(45,_35,_66,_0.3)_0_7px_13px_-3px,_#D6D6E7_0_-3px_0_inset] hover:-translate-y-1 active:translate-y-1 active:shadow-[gray_0_3px_7px_inset] !outline-none" autofocus>Unpause</button>
-            <button class="text-lg p-4 w-3/4 text-black bg-[#FDF0D5] rounded-md shadow-[rgba(45,35,66,0.4)_0_2px_4px,rgba(45,35,66,0.3)_0_7px_13px_-3px,#D6D6E7_0_-3px_0_inset] hover:shadow-[rgba(45,_35,_66,_0.4)_0_4px_8px,_rgba(45,_35,_66,_0.3)_0_7px_13px_-3px,_#D6D6E7_0_-3px_0_inset] hover:-translate-y-1 active:translate-y-1 active:shadow-[gray_0_3px_7px_inset] !outline-none">Difficulty: Hard</button>
-            <button class="text-lg p-4 w-3/4 text-black bg-[#FDF0D5] rounded-md shadow-[rgba(45,35,66,0.4)_0_2px_4px,rgba(45,35,66,0.3)_0_7px_13px_-3px,#D6D6E7_0_-3px_0_inset] hover:shadow-[rgba(45,_35,_66,_0.4)_0_4px_8px,_rgba(45,_35,_66,_0.3)_0_7px_13px_-3px,_#D6D6E7_0_-3px_0_inset] hover:-translate-y-1 active:translate-y-1 active:shadow-[gray_0_3px_7px_inset] !outline-none">Restart</button>
+            <button id="unpause" class="text-lg p-4 w-3/4 text-black bg-[#FDF0D5] rounded-md shadow-[rgba(45,35,66,0.4)_0_2px_4px,rgba(45,35,66,0.3)_0_7px_13px_-3px,#D6D6E7_0_-3px_0_inset] hover:shadow-[rgba(45,_35,_66,_0.4)_0_4px_8px,_rgba(45,_35,_66,_0.3)_0_7px_13px_-3px,_#D6D6E7_0_-3px_0_inset] hover:-translate-y-1 active:translate-y-1 active:shadow-[gray_0_3px_7px_inset] !outline-none" autofocus>Resume</button>
+            <button id="difficulty1" class="text-lg p-4 w-3/4 text-black bg-[#FDF0D5] rounded-md shadow-[rgba(45,35,66,0.4)_0_2px_4px,rgba(45,35,66,0.3)_0_7px_13px_-3px,#D6D6E7_0_-3px_0_inset] hover:shadow-[rgba(45,_35,_66,_0.4)_0_4px_8px,_rgba(45,_35,_66,_0.3)_0_7px_13px_-3px,_#D6D6E7_0_-3px_0_inset] hover:-translate-y-1 active:translate-y-1 active:shadow-[gray_0_3px_7px_inset] !outline-none">Difficulty: Hard</button>
+            <button id="restart1" class="text-lg p-4 w-3/4 text-black bg-[#FDF0D5] rounded-md shadow-[rgba(45,35,66,0.4)_0_2px_4px,rgba(45,35,66,0.3)_0_7px_13px_-3px,#D6D6E7_0_-3px_0_inset] hover:shadow-[rgba(45,_35,_66,_0.4)_0_4px_8px,_rgba(45,_35,_66,_0.3)_0_7px_13px_-3px,_#D6D6E7_0_-3px_0_inset] hover:-translate-y-1 active:translate-y-1 active:shadow-[gray_0_3px_7px_inset] !outline-none">Restart</button>
+        </dialog>
+        <dialog id="loss-menu" class="select-none bg-[#53acdb4D] flex flex-col items-center p-10 w-80 gap-8 rounded-tl-xl rounded-br-xl hidden">
+            <div class="text-3xl">You Lost!</div>
+            <button id="difficulty2" class="text-lg p-4 w-3/4 text-black bg-[#FDF0D5] rounded-md shadow-[rgba(45,35,66,0.4)_0_2px_4px,rgba(45,35,66,0.3)_0_7px_13px_-3px,#D6D6E7_0_-3px_0_inset] hover:shadow-[rgba(45,_35,_66,_0.4)_0_4px_8px,_rgba(45,_35,_66,_0.3)_0_7px_13px_-3px,_#D6D6E7_0_-3px_0_inset] hover:-translate-y-1 active:translate-y-1 active:shadow-[gray_0_3px_7px_inset] !outline-none">Difficulty: Hard</button>
+            <button id="restart2" class="text-lg p-4 w-3/4 text-black bg-[#FDF0D5] rounded-md shadow-[rgba(45,35,66,0.4)_0_2px_4px,rgba(45,35,66,0.3)_0_7px_13px_-3px,#D6D6E7_0_-3px_0_inset] hover:shadow-[rgba(45,_35,_66,_0.4)_0_4px_8px,_rgba(45,_35,_66,_0.3)_0_7px_13px_-3px,_#D6D6E7_0_-3px_0_inset] hover:-translate-y-1 active:translate-y-1 active:shadow-[gray_0_3px_7px_inset] !outline-none">Restart</button>
         </dialog>
     </div>
 </body>

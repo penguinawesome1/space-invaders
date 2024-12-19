@@ -2,8 +2,11 @@ class Board {
     constructor() {
         this.canvas = document.getElementById("game-board");
         this.context = this.canvas.getContext("2d");
+        this.scoreDisplay = document.getElementById("score");
+        this.score = 0;
         this.alienList = [];
-        this.bulletList = [];
+        this.enemyBulletList = [];
+        this.playerBulletList = [];
         this.initInputListeners();
         this.loop = setInterval(this.update.bind(this), 32);
     }
@@ -15,8 +18,14 @@ class Board {
                 case "A": player.moveLeft(); break;
                 case "ARROWRIGHT":
                 case "D": player.moveRight(); break;
+                case " ":
                 case "ARROWUP":
-                case "W": this.shootBullet(); break;
+                case "W": player.shootBullet(); break;
+                case "P":
+                    pauseMenu.showModal();
+                    pauseMenu.classList.remove("hidden");
+                    clearInterval(board.loop);
+                    break;
             }
         });
         
@@ -30,53 +39,64 @@ class Board {
         });
     }
 
-    shootBullet() {
-        const url = "./images/cannon.png";
-        const bullet = new Bullet(url, 10, 10, player.x + (player.width / 2), player.y - 15, -10);
-        bullet.draw();
-        this.bulletList.push(bullet);
-    }
-
     spawnAlien() {
-        const url = "./images/cannon.png";
+        const url = "./images/alien.png";
         const x = this.getRandomInt(this.canvas.width);
-        const alien = new Alien(url, 30, 30, x, 3);
+        const alien = new Alien(url, 60, 60, x, 3);
         alien.draw();
         this.alienList.push(alien);
     }
   
     update() {
-        for (let i = 0; i < this.alienList.length; i += 1) {
-            if (player.crashWith(this.alienList[i])) {
-                console.log("game over!");
-                clearInterval(board.loop);
-                return;
-            }
-        }
+        this.score += .25;
+        this.scoreDisplay.innerText = Math.floor(this.score);
 
         this.clear();
-        for (let i = 0; i < this.alienList.length; i += 1) {
+        for (let i = this.alienList.length - 1; i >= 0; i--) {
             this.alienList[i].newPos();
             this.alienList[i].draw();
+
             if (player.crashWith(this.alienList[i])) {
                 console.log("game over!");
+                const lossMenu = document.getElementById("loss-menu");
+                lossMenu.showModal();
+                lossMenu.classList.remove("hidden");
                 clearInterval(board.loop);
                 return;
             }
-            for (let a = 0; a < this.bulletList.length; a += 1) {
-                if (this.bulletList[a].crashWith(this.alienList[i])) {
-                    board.alienList.splice(board.alienList.indexOf(this), 1);
-                    board.bulletList.splice(board.bulletList.indexOf(this), 1);
+            for (let a = this.playerBulletList.length - 1; a >= 0; a--) {
+                if (this.playerBulletList[a].crashWith(this.alienList[i])) {
+                    board.alienList.splice(i, 1);
+                    board.playerBulletList.splice(a, 1);
+                    this.score += 10;
+                    i--;
+                    a--;
                 }
             }
         }
-        for (let i = 0; i < this.bulletList.length; i += 1) {
-            this.bulletList[i].newPos();
-            this.bulletList[i].draw();
-            if (player.crashWith(this.bulletList[i])) {
+        for (let i = this.enemyBulletList.length - 1; i >= 0; i--) {
+            const myBullet = this.enemyBulletList[i];
+            myBullet.newPos();
+            myBullet.draw();
+            const belowScreen = myBullet.y - myBullet.height > this.canvas.height;
+            if (player.crashWith(this.enemyBulletList[i])) {
                 console.log("game over!");
                 clearInterval(board.loop);
                 return;
+            }
+            if (belowScreen) {
+                this.enemyBulletList.splice(i, 1);
+                i--;
+            }
+        }
+        for (let i = this.playerBulletList.length - 1; i >= 0; i--) {
+            const myBullet = this.playerBulletList[i];
+            myBullet.newPos();
+            myBullet.draw();
+            const aboveScreen = myBullet.y + myBullet.height < 0;
+            if (aboveScreen) {
+                this.playerBulletList.splice(i, 1);
+                i--;
             }
         }
         player.newPos();
@@ -115,23 +135,23 @@ class Component {
 
     crashWith(otherObj) {
         const myLeft = this.x;
-        const myRight = this.x + (this.width);
+        const myRight = this.x + this.width;
         const myTop = this.y;
-        const myBottom = this.y + (this.height);
+        const myBottom = this.y + this.height;
         const otherLeft = otherObj.x;
-        const otherRight = otherObj.x + (otherObj.width);
+        const otherRight = otherObj.x + otherObj.width;
         const otherTop = otherObj.y;
-        const otherBottom = otherObj.y + (otherObj.height);
-        return !((myBottom < otherTop) || (myTop > otherBottom) || (myRight < otherLeft) || (myLeft > otherRight));
+        const otherBottom = otherObj.y + otherObj.height;
+        return !(myBottom < otherTop || myTop > otherBottom || myRight < otherLeft || myLeft > otherRight);
     }
 }
 
 class Player extends Component {
     constructor() {
         const canvas = document.getElementById("game-board");
-        const width = 180;
-        const height = 40;
-        const x = 100;
+        const width = 100;
+        const height = 80;
+        const x = (canvas.width - width) / 2;
         const y = canvas.height - 100;
         const url = "./images/cannon.png";
         super(width, height, x, y, url);
@@ -164,10 +184,17 @@ class Player extends Component {
             this.speedX = 0;
         }
     }
+
+    shootBullet() {
+        const url = "./images/bullet.png";
+        const bullet = new Bullet(url, 25, 25, this.x + (this.width - 25) / 2, this.y - 30, -10);
+        bullet.draw();
+        board.playerBulletList.push(bullet);
+    }
 }
 
 class Alien extends Component {
-    constructor(imageUrl, width = 30, height = 30, x = 150, speedY = 4) {
+    constructor(imageUrl, width = 60, height = 60, x = 150, speedY = 4) {
         const y = 0;
         super(width, height, x, y, imageUrl);
         this.speedY = speedY;
@@ -183,6 +210,13 @@ class Alien extends Component {
             board.alienList.splice(board.alienList.indexOf(this), 1);
         }
     }
+
+    shootBullet() {
+        const url = "./images/bullet.png";
+        const bullet = new Bullet(url, 25, 25, this.x + (this.width - 25) / 2, this.y - 30, 10);
+        bullet.draw();
+        board.enemyBulletList.push(bullet);
+    }
 }
 
 class Bullet extends Component {
@@ -193,29 +227,37 @@ class Bullet extends Component {
 
     newPos() {
         this.y += this.speedY;
-        this.hitTopOrBottom();
-    }
-
-    hitTopOrBottom() {
-        if (this.y > this.canvas.height || this.y < 0) {
-            board.bulletList.splice(board.bulletList.indexOf(this), 1);
-        }
     }
 }
 
-const player = new Player();
-const board = new Board();
+let player = new Player();
+let board = new Board();
 
-const dialog = document.getElementById("pause-menu");
+const pauseMenu = document.getElementById("pause-menu");
+const lossMenu = document.getElementById("loss-menu");
 
 document.getElementById("pause-button").addEventListener("click", () => {
-    dialog.showModal();
-    dialog.classList.remove("hidden");
+    pauseMenu.showModal();
+    pauseMenu.classList.remove("hidden");
     clearInterval(board.loop);
 });
 
 document.getElementById("unpause").addEventListener("click", () => {
-    dialog.close();
-    dialog.classList.add("hidden");
+    pauseMenu.close();
+    pauseMenu.classList.add("hidden");
     board.loop = setInterval(board.update.bind(board), 32);
+});
+
+document.getElementById("restart1").addEventListener("click", () => {
+    pauseMenu.close();
+    pauseMenu.classList.add("hidden");
+    player = new Player();
+    board = new Board();
+});
+
+document.getElementById("restart2").addEventListener("click", () => {
+    lossMenu.close();
+    lossMenu.classList.add("hidden");
+    player = new Player();
+    board = new Board();
 });
