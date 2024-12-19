@@ -39,7 +39,6 @@ class Board {
                     board.alienList.splice(i, 1);
                     board.playerBulletList.splice(a, 1);
                     this.score += 10;
-                    break;
                 }
             }
 
@@ -59,7 +58,6 @@ class Board {
             }
             if (belowScreen) {
                 this.enemyBulletList.splice(i, 1);
-                break;
             }
         }
         for (let i = this.playerBulletList.length - 1; i >= 0; i--) {
@@ -69,7 +67,6 @@ class Board {
             const aboveScreen = myBullet.y + myBullet.height < 0;
             if (aboveScreen) {
                 this.playerBulletList.splice(i, 1);
-                break;
             }
         }
 
