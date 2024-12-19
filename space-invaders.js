@@ -156,6 +156,7 @@ class Player extends Component {
         const url = "./images/cannon.png";
         super(width, height, x, y, url);
         this.speedX = 0;
+        this.canShoot = true;
     }
 
     newPos() {
@@ -186,10 +187,15 @@ class Player extends Component {
     }
 
     shootBullet() {
+        if (!this.canShoot) return;
         const url = "./images/bullet.png";
         const bullet = new Bullet(url, 25, 25, this.x + (this.width - 25) / 2, this.y - 30, -10);
         bullet.draw();
         board.playerBulletList.push(bullet);
+        this.canShoot = false;
+        setTimeout(() => {
+            this.canShoot = true;
+        }, 800);
     }
 }
 
