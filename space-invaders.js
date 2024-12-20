@@ -11,66 +11,48 @@ class Board {
     }
 
     spawnAlien() {
-        const url = "./images/alien.png";
         const x = Math.max(0, this.getRandomInt(this.canvas.width) - 60);
-        const speedY = 2 + difficulties[currentDifficulty]
-        const alien = new Alien(url, 60, 60, x, speedY);
-        alien.draw();
-        this.alienList.push(alien);
+        if (this.getRandomInt(2) === 0) {
+            const alien = new Crasher(x);
+            this.alienList.push(alien);
+        } else {
+            const alien = new Shooter(x);
+            this.alienList.push(alien);
+        }
     }
   
     update() {
         this.score += .25;
         this.scoreDisplay.innerText = Math.floor(this.score);
 
+        for (const alien of this.alienList) {
+            const frequency = 120 - difficulties[currentDifficulty] * 40;
+            if (alien instanceof Shooter && this.getRandomInt(frequency) === 0) {
+                alien.shootBullet(alien.x + alien.width / 2, alien.y + alien.height);
+            }
+
+            alien.newPos();
+        }
+        for (const bullet of this.playerBulletList) {
+            bullet.newPos();
+        }
+        for (const bullet of this.enemyBulletList) {
+            bullet.newPos();
+        }
         this.clear();
         player.newPos();
         player.draw();
-        for (let i = this.alienList.length - 1; i >= 0; i--) {
-            this.alienList[i].newPos();
-            this.alienList[i].draw();
-
-            if (player.crashWith(this.alienList[i])) {
-                this.gameOver();
-                return;
-            }
-            for (let a = this.playerBulletList.length - 1; a >= 0; a--) {
-                if (this.playerBulletList[a].crashWith(this.alienList[i])) {
-                    board.alienList.splice(i, 1);
-                    board.playerBulletList.splice(a, 1);
-                    this.score += 10;
-                }
-            }
-
-            const frequency = 160 - difficulties[currentDifficulty] * 40;
-            if (this.getRandomInt(frequency) === 0) {
-                this.alienList[i].shootBullet();
-            }
+        for (const alien of this.alienList) {
+            alien.draw();
         }
-        for (let i = this.enemyBulletList.length - 1; i >= 0; i--) {
-            const myBullet = this.enemyBulletList[i];
-            myBullet.newPos();
-            myBullet.draw();
-            const belowScreen = myBullet.y - myBullet.height > this.canvas.height;
-            if (player.crashWith(this.enemyBulletList[i])) {
-                this.gameOver();
-                return;
-            }
-            if (belowScreen) {
-                this.enemyBulletList.splice(i, 1);
-            }
+        for (const bullet of this.playerBulletList) {
+            bullet.draw();
         }
-        for (let i = this.playerBulletList.length - 1; i >= 0; i--) {
-            const myBullet = this.playerBulletList[i];
-            myBullet.newPos();
-            myBullet.draw();
-            const aboveScreen = myBullet.y + myBullet.height < 0;
-            if (aboveScreen) {
-                this.playerBulletList.splice(i, 1);
-            }
+        for (const bullet of this.enemyBulletList) {
+            bullet.draw();
         }
 
-        const frequency = 120 - difficulties[currentDifficulty] * 40
+        const frequency = 120 - difficulties[currentDifficulty] * 40;
         if (this.getRandomInt(frequency) === 0) {
             this.spawnAlien();
         }
@@ -94,16 +76,16 @@ class Board {
 }
 
 class Component {
-    constructor(width, height, x, y, imageUrl) {
+    constructor(url, x, y, width, height) {
         this.canvas = document.getElementById("game-board");
         this.context = this.canvas.getContext("2d");
-        this.width = width;
-        this.height = height;
+        this.image = new Image();
+	    this.image.src = url;
+	    this.image.onload = () => this.draw();
         this.x = x;
         this.y = y;
-        this.image = new Image();
-	    this.image.src = imageUrl;
-	    this.image.onload = () => this.draw();
+        this.width = width;
+        this.height = height;
     }
     
     draw() {
@@ -119,19 +101,20 @@ class Component {
         const otherRight = otherObj.x + otherObj.width;
         const otherTop = otherObj.y;
         const otherBottom = otherObj.y + otherObj.height;
-        return !(myBottom < otherTop || myTop > otherBottom || myRight < otherLeft || myLeft > otherRight);
+        const crash = !(myBottom < otherTop || myTop > otherBottom || myRight < otherLeft || myLeft > otherRight);
+        return crash;
     }
 }
 
 class Player extends Component {
     constructor() {
         const canvas = document.getElementById("game-board");
+        const url = "./images/cannon.png";
         const width = 100;
         const height = 80;
         const x = (canvas.width - width) / 2;
         const y = canvas.height - 100;
-        const url = "./images/cannon.png";
-        super(width, height, x, y, url);
+        super(url, x, y, width, height);
         this.speedX = 0;
         this.canShoot = true;
     }
@@ -165,8 +148,7 @@ class Player extends Component {
 
     shootBullet() {
         if (!this.canShoot) return;
-        const url = "./images/bullet.png";
-        const bullet = new Bullet(url, 25, 25, this.x + (this.width - 25) / 2, this.y, -10);
+        const bullet = new PlayerBullet(this.x + this.width / 2, this.y);
         bullet.draw();
         board.playerBulletList.push(bullet);
         const cooldown = 700 + difficulties[currentDifficulty] * 100;
@@ -178,39 +160,97 @@ class Player extends Component {
 }
 
 class Alien extends Component {
-    constructor(imageUrl, width = 60, height = 60, x = 150, speedY = 4) {
+    constructor(url, x, width, height, speedY) {
         const y = 0;
-        super(width, height, x, y, imageUrl);
+        super(url, x, y, width, height);
         this.speedY = speedY;
     }
 
     newPos() {
         this.y += this.speedY;
-        this.hitBottom();
-    }
-
-    hitBottom() {
         if (this.y > this.canvas.height) {
             board.alienList.splice(board.alienList.indexOf(this), 1);
         }
+        if (this.crashWith(player)) {
+            board.gameOver();
+        }
+        for (const playerBullet of board.playerBulletList) {
+            if (this.crashWith(playerBullet)) {
+                board.alienList.splice(board.alienList.indexOf(this), 1);
+                board.playerBulletList.splice(board.playerBulletList.indexOf(playerBullet), 1);
+                board.score += 10;
+                break;
+            }
+        }
+    }
+}
+
+class Shooter extends Alien {
+    constructor(x) {
+        const url = "./images/alien.png";
+        const width = 60;
+        const height = 60;
+        const speedY = 2 + difficulties[currentDifficulty];
+        super(url, x, width, height, speedY);
     }
 
-    shootBullet() {
-        const url = "./images/bullet.png";
-        const bullet = new Bullet(url, 25, 25, this.x + (this.width - 25) / 2, this.y + this.height, 10);
+    shootBullet(x, y) {
+        const bullet = new EnemyBullet(x, y);
         bullet.draw();
         board.enemyBulletList.push(bullet);
     }
 }
 
-class Bullet extends Component {
-    constructor(imageUrl, width = 10, height = 10, x = 200, y = 200, speedY = -10) {
-        super(width, height, x, y, imageUrl);
-        this.speedY = speedY;
+class Crasher extends Alien {
+    constructor(x) {
+        const url = "./images/alien.png";
+        const width = 60;
+        const height = 60;
+        const speedY = 3 + difficulties[currentDifficulty];
+        super(url, x, width, height, speedY);
+        this.x = x;
+    }
+
+    newPos() {
+        this.x += Math.sin(this.y / 120) * 3;
+        super.newPos();
+    }
+}
+
+class PlayerBullet extends Component {
+    constructor(x, y) {
+        const url = "./images/bullet.png";
+        const width = 25;
+        const height = 25;
+        super(url, x - width/2, y - height, width, height);
+        this.speedY = -10;
     }
 
     newPos() {
         this.y += this.speedY;
+        if (this.y + this.height < 0) {
+            board.playerBulletList.splice(board.playerBulletList.indexOf(this), 1);
+        }
+    }
+}
+
+class EnemyBullet extends Component {
+    constructor(x, y) {
+        const url = "./images/bullet.png";
+        const width = 30;
+        const height = 30;
+        super(url, x - width/2, y, width, height);
+        this.speedY = 10;
+    }
+
+    newPos() {
+        this.y += this.speedY;
+        if (this.y > this.canvas.height) {
+            board.enemyBulletList.splice(board.enemyBulletList.indexOf(this), 1);
+        }
+        if (this.crashWith(player)) {
+            board.gameOver();
+        }
     }
 }
 
